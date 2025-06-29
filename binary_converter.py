@@ -1,11 +1,14 @@
 '''
-This is a simple binary conversion program that evolves over time as my skills develop.
+This is a simple binary conversion program.
 
 Features:
 -conversion between positive decimal, binary and hexadecimal integers
 -inversion of binary digits
 -conversion between binary code and text
 '''
+
+import tkinter as tk
+from tkinter import ttk, messagebox
 
 def binary_to_decimal(digit):
     digit = digit.replace(" ", "")
@@ -136,58 +139,98 @@ def ascii_to_binary(text):
     return binary
 
 
-def main():
-    counter = 0
-    while True:
-        if counter == 0:
-            choice = input("""What sort of conversion would you like to make? The options are:
-- binary to decimal (bin-dec or 2-10)
-- decimal to binary (dec-bin or 10-2)
-- hexadecimal to decimal (hex-dec or 16-10)
-- hexadecimal to binary (hex-bin or 16-2)
-- decimal to hexadecimal (dec-hex or 10-16)
-- binary to hexadecimal (bin-hex or 2-16)
-- invert binary digits (invert)
-- binary to ASCII (bin-ascii)
-- ASCII to binary (ascii-bin)
-- quit (q)
-Your choice: """)
-        elif counter > 0:
-            choice = input("What sort of conversion would you like to make? Your choice: ")
-        if choice == "q":
-            quit()
-        elif choice == "invert":
-            digit = input("Type a binary number to invert: ")
-        elif choice == "bin-ascii":
-            digit = input("Type a binary number to convert to ASCII: ")
-        elif choice == "ascii-bin":
-            text = input("Type a text to convert to binary: ")
-        else: 
-            digit = input("Type a digit to convert: ")
-        print("")
-        if choice == "bin-dec" or choice == "2-10":
-            print("Binary {} is {} in decimal form.\n".format(digit, binary_to_decimal(digit)))
-        if choice == "dec-bin" or choice == "10-2":
-            print("Decimal {} is {} in binary form.\n".format(digit, decimal_to_binary(digit)))
-        if choice == "hex-dec" or choice == "16-10":
-            print("Hexadecimal {} is {} in decimal form.\n".format(digit, hexadecimal_to_decimal(digit)))
-        if choice == "hex-bin" or choice == "16-2":
-            decimal = int(hexadecimal_to_decimal(digit))
-            print("Hexadecimal {} is {} in binary form.\n".format(digit, decimal_to_binary(decimal)))
-        if choice == "dec-hex" or choice == "10-16":
-            print("Decimal {} is {} in hexadecimal form.\n".format(digit, decimal_to_hexadecimal(digit)))
-        if choice == "bin-hex" or choice == "2-16":
-            decimal = binary_to_decimal(digit)
-            print("Binary {} is {} in hexadecimal form.\n".format(digit, decimal_to_hexadecimal(decimal)))
-        if choice == "invert" or choice == "i":
-            print("The inverse of {} is {}.\n".format(digit, invert_binary(digit)))
-        if choice == "bin-ascii":
-            print(digit + ' is "' + binary_to_ascii(digit) + '" in ASCII\n')
-        if choice == "ascii-bin":
-            print(text + ' is "' + ascii_to_binary(text) + '" in binary\n')
+def gui_convert():
+    conversion = conversion_var.get()
+    input_value = input_entry.get()
+    result = ""
+    try:
+        if conversion == "Binary to Decimal":
+            result = binary_to_decimal(input_value)
+            result_label.config(text=f"{result}")
+        elif conversion == "Decimal to Binary":
+            result = decimal_to_binary(input_value)
+            result_label.config(text=f"{result}")
+        elif conversion == "Hexadecimal to Decimal":
+            result = hexadecimal_to_decimal(input_value)
+            result_label.config(text=f"{result}")
+        elif conversion == "Hexadecimal to Binary":
+            dec = hexadecimal_to_decimal(input_value)
+            result = decimal_to_binary(dec)
+            result_label.config(text=f"{result}")
+        elif conversion == "Decimal to Hexadecimal":
+            result = decimal_to_hexadecimal(input_value)
+            result_label.config(text=f"{result}")
+        elif conversion == "Binary to Hexadecimal":
+            dec = binary_to_decimal(input_value)
+            result = decimal_to_hexadecimal(dec)
+            result_label.config(text=f"{result}")
+        elif conversion == "Invert Binary":
+            result = invert_binary(input_value)
+            result_label.config(text=f"{result}")
+        elif conversion == "Binary to ASCII":
+            result = binary_to_ascii(input_value)
+            result_label.config(text=f"{result}")
+        elif conversion == "ASCII to Binary":
+            result = ascii_to_binary(input_value)
+            result_label.config(text=f"{result}")
         else:
-            pass
-        counter += 1
+            result_label.config(text="Unknown conversion.")
+            result = ""
+        # Enable copy button if result is not empty
+        if result:
+            copy_btn.config(state="normal")
+        else:
+            copy_btn.config(state="disabled")
+    except Exception as e:
+        messagebox.showerror("Error", f"Conversion failed: {e}")
+        copy_btn.config(state="disabled")
+
+def copy_result():
+    result = result_label.cget("text")
+    if result and result != "(output will appear here)" and result != "Unknown conversion.":
+        root.clipboard_clear()
+        root.clipboard_append(result)
+        root.update()  # Keeps clipboard after window closes
+
+def main():
+    global conversion_var, input_entry, result_label, copy_btn, root
+    root = tk.Tk()
+    root.title("Binary Converter")
+
+    conversions = [
+        "Binary to Decimal",
+        "Decimal to Binary",
+        "Hexadecimal to Decimal",
+        "Hexadecimal to Binary",
+        "Decimal to Hexadecimal",
+        "Binary to Hexadecimal",
+        "Invert Binary",
+        "Binary to ASCII",
+        "ASCII to Binary"
+    ]
+
+    frame = ttk.Frame(root, padding=20)
+    frame.grid(row=0, column=0)
+
+    ttk.Label(frame, text="Conversion Type:").grid(row=0, column=0, sticky="w")
+    conversion_var = tk.StringVar(value=conversions[0])
+    conversion_menu = ttk.Combobox(frame, textvariable=conversion_var, values=conversions, state="readonly", width=25)
+    conversion_menu.grid(row=0, column=1, pady=5)
+
+    ttk.Label(frame, text="Input:").grid(row=1, column=0, sticky="w")
+    input_entry = ttk.Entry(frame, width=30)
+    input_entry.grid(row=1, column=1, pady=5)
+
+    convert_btn = ttk.Button(frame, text="Convert", command=gui_convert)
+    convert_btn.grid(row=2, column=0, columnspan=2, pady=10)
+
+    result_label = ttk.Label(frame, text="(output will appear here)")
+    result_label.grid(row=3, column=0, columnspan=2, pady=5)
+
+    copy_btn = ttk.Button(frame, text="Copy output", command=copy_result, state="disabled")
+    copy_btn.grid(row=4, column=0, columnspan=2, pady=5)
+
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
